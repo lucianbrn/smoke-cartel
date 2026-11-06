@@ -6,6 +6,18 @@ export const config = { runtime: 'edge' };
 const PATHNAME = 'corkboard/notes.json';
 const API = 'https://blob.vercel-storage.com';
 const MAX_NOTES = 300;
+const PALETTE = ['yellow', 'pink', 'blue', 'green', 'orange', 'lilac'];
+
+// A poster's color is a stable hash of their connection IP — same IP, same color.
+// The raw IP is never stored or returned; only the color name is saved on the note.
+async function colorFor(req) {
+  const ip =
+    (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() ||
+    req.headers.get('x-real-ip') ||
+    'unknown';
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(ip));
+  return PALETTE[new Uint8Array(digest)[0] % PALETTE.length];
+}
 
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -72,7 +84,7 @@ export default async function handler(req) {
       const text = String(body.text || '').trim().slice(0, 500);
       if (!name || !text) return json({ error: 'name and note are both required' }, 400);
       const notes = await readNotes(token);
-      const note = { id: crypto.randomUUID(), name, text, ts: Date.now() };
+      const note = { id: crypto.randomUUID(), name, text, ts: Date.now(), color: await colorFor(req) };
       notes.push(note);
       while (notes.length > MAX_NOTES) notes.shift();
       const ok = await writeNotes(token, notes);
