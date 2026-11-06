@@ -93,7 +93,7 @@
       z-index: 5;
       width: 100%;
       display: grid;
-      grid-template-columns: repeat(8, minmax(0, 1fr));
+      grid-template-columns: repeat(9, minmax(0, 1fr));
       padding: 0 max(6vw, calc((100vw - 1120px) / 2));
       border-bottom: 1px solid var(--rule);
       background: var(--paper);
@@ -1027,6 +1027,154 @@
       .papers-float { animation: none; }
       .paper-sheet { transition: none; }
     }
+
+    /* ---------- The Board: the shared corkboard ----------
+       A real cork board in a dark wood frame: warm cork browns are the
+       board material itself, pinned with cream paper slips under purple
+       pushpins. Notes are shared and server-saved through /api/notes —
+       anyone with the link sees the same board. The pin form rides at
+       the top of the board as its own wide paper slip. */
+    #board-panel { padding-bottom: 49px; }
+    .corkboard {
+      margin-top: 24px;
+      padding: clamp(18px, 3.4vw, 30px);
+      border: 12px solid #2A1A10;
+      outline: 1.5px solid var(--ink);
+      outline-offset: 3px;
+      background-color: #B0824C;
+      background-image:
+        radial-gradient(rgba(90, 55, 20, .35) 1.2px, transparent 1.6px),
+        radial-gradient(rgba(240, 200, 140, .4) 1px, transparent 1.4px),
+        radial-gradient(rgba(120, 75, 30, .25) 2px, transparent 2.6px);
+      background-size: 26px 26px, 18px 18px, 44px 44px;
+      background-position: 0 0, 7px 11px, 13px 5px;
+      box-shadow: inset 0 0 34px rgba(46, 26, 8, .45), 4px 4px 0 rgba(30, 20, 12, .15);
+    }
+    .cork-label {
+      margin: 0;
+      text-align: center;
+      font-family: var(--font-cond);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .22em;
+      font-size: 15px;
+      color: #FFF3DC;
+      text-shadow: 0 1px 2px rgba(46, 26, 8, .6);
+    }
+    .cork-note {
+      max-width: 560px;
+      margin: 8px auto 0;
+      text-align: center;
+      font-size: 12.5px;
+      line-height: 1.55;
+      color: #FBEAD3;
+      text-shadow: 0 1px 2px rgba(46, 26, 8, .55);
+    }
+    .board-form {
+      max-width: 620px;
+      margin: 20px auto 0;
+      padding: 20px 18px 16px;
+      background: var(--panel);
+      border: 1px solid rgba(30, 20, 12, .3);
+      box-shadow: 0 2px 3px rgba(46, 26, 8, .3), 0 12px 22px rgba(46, 26, 8, .28);
+      transform: rotate(-.4deg);
+    }
+    .board-form label { display: block; margin: 0 0 6px; font-family: var(--font-cond); font-weight: 600; text-transform: uppercase; letter-spacing: .09em; font-size: 11.5px; color: var(--purple); }
+    .board-form label + input, .board-form label + textarea { margin-bottom: 13px; }
+    .board-input, .board-textarea {
+      display: block;
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 11px;
+      border: 1px solid var(--gold-dim);
+      border-radius: 0;
+      background: #FFFDF6;
+      color: var(--ink);
+      font: inherit;
+      font-size: 16px;
+      line-height: 1.45;
+    }
+    .board-textarea { resize: vertical; min-height: 76px; }
+    .board-input::placeholder, .board-textarea::placeholder { color: var(--muted); }
+    .board-input:focus-visible, .board-textarea:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+    .board-form-error { margin: 0 0 11px; color: #7A1E1E; font-size: 13px; font-weight: 700; line-height: 1.5; }
+    .board-form-error[hidden] { display: none; }
+    .board-pin-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 48px;
+      padding: 10px 18px;
+      border: 1.5px solid var(--ink);
+      background: var(--purple);
+      color: #FBEAD3;
+      font-family: var(--font-cond);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      font-size: 14.5px;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 rgba(30, 20, 12, .35);
+    }
+    .board-pin-btn:hover { background: var(--purple-deep); }
+    .board-pin-btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 rgba(30, 20, 12, .35); }
+    .board-pin-btn:disabled { opacity: .65; cursor: wait; }
+    .board-status {
+      max-width: 480px;
+      margin: 22px auto 4px;
+      padding: 13px 16px;
+      text-align: center;
+      background: var(--panel);
+      border: 1px solid rgba(30, 20, 12, .3);
+      box-shadow: 0 2px 3px rgba(46, 26, 8, .3), 0 10px 18px rgba(46, 26, 8, .24);
+      color: var(--body2);
+      font-size: 13.5px;
+      line-height: 1.55;
+      transform: rotate(.5deg);
+    }
+    .board-status[hidden] { display: none; }
+    .pins-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 20px 18px;
+      margin-top: 24px;
+      align-items: start;
+    }
+    .pin-note {
+      position: relative;
+      min-width: 0;
+      padding: 24px 15px 13px;
+      background: #FFF3A0;
+      border: 1px solid rgba(30, 20, 12, .22);
+      box-shadow: 0 2px 3px rgba(46, 26, 8, .3), 0 10px 18px rgba(46, 26, 8, .26);
+    }
+    .pin-note::before {
+      content: "";
+      position: absolute;
+      top: 7px;
+      left: 50%;
+      width: 14px;
+      height: 14px;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 32%, #7A5CFF 0%, var(--purple) 55%, var(--purple-deep) 100%);
+      box-shadow: 0 2px 3px rgba(30, 20, 12, .45), inset 0 -2px 3px rgba(0, 0, 0, .35);
+    }
+    .pin-name { margin: 0 0 6px; font-family: var(--font-display); font-weight: 800; font-size: 17px; line-height: 1.2; color: var(--ink); overflow-wrap: anywhere; }
+    .pin-text { margin: 0; color: var(--body2); font-size: 13.5px; line-height: 1.55; white-space: pre-line; overflow-wrap: anywhere; }
+    .pin-date { margin: 10px 0 0; font-family: var(--font-type); font-size: 11px; color: var(--muted); }
+    @media (max-width: 700px) {
+      .corkboard { border-width: 9px; padding: 16px 12px 20px; }
+      .pins-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 12px; margin-top: 18px; }
+      .board-form { padding: 16px 13px 13px; }
+      .pin-note { padding: 22px 11px 11px; }
+      .pin-name { font-size: 15.5px; }
+      .pin-text { font-size: 12.5px; }
+    }
+    @media (max-width: 340px) {
+      .pins-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -1052,6 +1200,7 @@
     <button id="tab-money" type="button" role="tab" aria-selected="false" aria-controls="money-panel" tabindex="-1">The Money</button>
     <button id="tab-shop" type="button" role="tab" aria-selected="false" aria-controls="shop-panel" tabindex="-1">Shop</button>
     <button id="tab-network" type="button" role="tab" aria-selected="false" aria-controls="network-panel" tabindex="-1">The Network</button>
+    <button id="tab-board" type="button" role="tab" aria-selected="false" aria-controls="board-panel" tabindex="-1">The Board</button>
     <button id="tab-look" type="button" role="tab" aria-selected="false" aria-controls="look-panel" tabindex="-1">The Palace</button>
   </nav>
   <main id="top">
@@ -2148,6 +2297,33 @@
       <p class="fineprint" style="margin-top:18px">Counted from LinkedIn headlines, Nov 5, 2026. Lucian's list reviewed in full; Josiah's via LinkedIn's connections search (201 of 202). Stephen's network counted the same way, Nov 5, 2026 (136 of 141 reviewed). Headlines show roles, not willingness — every lane still starts with a conversation.</p>
     </section>
 
+    <section id="board-panel" role="tabpanel" aria-labelledby="tab-board" tabindex="0" hidden>
+      <div class="sub-section">
+        <div class="section-head">
+          <div>
+            <p class="section-tag">The Board · the partners' corkboard</p>
+            <h2>Pin it up where everyone can see it.</h2>
+          </div>
+          <p class="head-note">One board for the whole crew — leave a note, a reminder, or the next move, and it stays up for the next person who opens the link.</p>
+        </div>
+        <div class="corkboard">
+          <p class="cork-label">The Corkboard</p>
+          <p class="cork-note">Every pin saves to the server — anyone with this link sees the same board and can pin to it.</p>
+          <p class="cork-note">Your color is yours — it follows your connection, so everyone's pins are easy to spot.</p>
+          <form id="board-form" class="board-form">
+            <label for="board-name">Your name</label>
+            <input id="board-name" class="board-input" type="text" placeholder="Your name" maxlength="40" autocomplete="name">
+            <label for="board-text">Your note</label>
+            <textarea id="board-text" class="board-textarea" placeholder="Pin a note…" maxlength="500" rows="3"></textarea>
+            <p id="board-form-error" class="board-form-error" role="alert" hidden></p>
+            <button id="board-pin-btn" class="board-pin-btn" type="submit">PIN IT</button>
+          </form>
+          <p id="board-status" class="board-status">Loading the board…</p>
+          <div id="board-pins" class="pins-grid"></div>
+        </div>
+      </div>
+    </section>
+
     <section id="look-panel" role="tabpanel" aria-labelledby="tab-look" tabindex="0" hidden>
       <div class="look-hero">
         <p class="section-tag">The Palace · the theme</p>
@@ -2328,6 +2504,7 @@
         tabPanels[tabIndex].hidden = !selected;
       });
       if (moveFocus) siteTabs[index].focus();
+      if (tabPanels[index] && tabPanels[index].id === "board-panel") loadBoard();
     }
     siteTabs.forEach((tab, index) => {
       tab.addEventListener("click", () => activateTab(index));
@@ -2356,6 +2533,127 @@
       activateTab(idx);
       tabPanels[idx].scrollIntoView({ behavior: "smooth", block: "start" });
     }));
+
+    /* ---------- The Board: shared notes, saved on the server ----------
+       GET /api/notes returns every pin in order; POST /api/notes adds
+       one. All note content is rendered with textContent only — never
+       innerHTML — so a pin can never inject markup into the board. */
+    const boardForm = document.getElementById("board-form");
+    const boardName = document.getElementById("board-name");
+    const boardText = document.getElementById("board-text");
+    const boardPinBtn = document.getElementById("board-pin-btn");
+    const boardFormError = document.getElementById("board-form-error");
+    const boardStatus = document.getElementById("board-status");
+    const boardPins = document.getElementById("board-pins");
+    let boardLoaded = false;
+
+    function pinRotation(note) {
+      const key = String(note && note.id != null ? note.id : "") + "|" + String(note && note.name ? note.name : "");
+      let hash = 0;
+      for (let i = 0; i < key.length; i += 1) hash = (hash * 31 + key.charCodeAt(i)) | 0;
+      return (((hash % 5) + 5) % 5 - 2) * 1.1;
+    }
+    function pinDate(ts) {
+      const d = new Date(ts);
+      if (Number.isNaN(d.getTime())) return "";
+      return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    }
+    const PIN_COLORS = {
+      yellow: "#FFF3A0",
+      pink: "#FFC7D9",
+      blue: "#BDE0FE",
+      green: "#CDEAC0",
+      orange: "#FFD6A5",
+      lilac: "#E4C1F9"
+    };
+    function renderPin(note) {
+      const slip = document.createElement("article");
+      slip.className = "pin-note";
+      slip.style.backgroundColor = PIN_COLORS[note && note.color] || PIN_COLORS.yellow;
+      slip.style.transform = `rotate(${pinRotation(note).toFixed(2)}deg)`;
+      const name = document.createElement("h3");
+      name.className = "pin-name";
+      name.textContent = note.name || "";
+      const text = document.createElement("p");
+      text.className = "pin-text";
+      text.textContent = note.text || "";
+      slip.append(name, text);
+      const date = pinDate(note.ts);
+      if (date) {
+        const when = document.createElement("p");
+        when.className = "pin-date";
+        when.textContent = `Pinned ${date}`;
+        slip.append(when);
+      }
+      return slip;
+    }
+    function setBoardStatus(message) {
+      if (message) {
+        boardStatus.textContent = message;
+        boardStatus.hidden = false;
+      } else {
+        boardStatus.hidden = true;
+      }
+    }
+    function loadBoard() {
+      if (!boardLoaded) setBoardStatus("Loading the board…");
+      fetch("/api/notes")
+        .then((res) => {
+          if (!res.ok) throw new Error("board load failed");
+          return res.json();
+        })
+        .then((data) => {
+          const notes = data && Array.isArray(data.notes) ? data.notes : [];
+          boardLoaded = true;
+          boardPins.replaceChildren(...notes.map(renderPin));
+          setBoardStatus(notes.length ? null : "No pins yet — be the first.");
+        })
+        .catch(() => {
+          if (!boardLoaded) setBoardStatus("The board couldn't load — check your connection and reopen the tab.");
+        });
+    }
+    boardForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const name = boardName.value.trim();
+      const text = boardText.value.trim();
+      boardFormError.hidden = true;
+      if (!name || !text) {
+        boardFormError.textContent = "Add your name and a note, then pin it.";
+        boardFormError.hidden = false;
+        return;
+      }
+      boardPinBtn.disabled = true;
+      boardPinBtn.textContent = "PINNING…";
+      fetch("/api/notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, text })
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("pin failed");
+          return res.json();
+        })
+        .then((data) => {
+          if (data && data.note) {
+            boardPins.append(renderPin(data.note));
+            boardLoaded = true;
+            setBoardStatus(null);
+          } else {
+            loadBoard();
+          }
+          boardText.value = "";
+          boardText.focus();
+        })
+        .catch(() => {
+          boardFormError.textContent = "Couldn't save that pin — try again.";
+          boardFormError.hidden = false;
+        })
+        .finally(() => {
+          boardPinBtn.disabled = false;
+          boardPinBtn.textContent = "PIN IT";
+        });
+    });
+    loadBoard();
 
     const categoryButtons = [...document.querySelectorAll("[data-category]")];
     const shopCards = [...document.querySelectorAll(".shop-card")];
