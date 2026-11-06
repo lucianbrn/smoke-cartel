@@ -1,10 +1,13 @@
 // Smoke Cartel — shared corkboard API (Vercel Edge Function + Vercel Blob)
-// Notes live in ONE JSON blob: corkboard/notes.json — server-side, shared by everyone with the link.
+// Each note is its OWN immutable blob: corkboard/notes/<ts>-<id>.json
+// (append-only: no overwrites, so no note can be lost to a stale read or a race).
+// A legacy single-file board (corkboard/notes.json) is merged in if present.
 // GET  /api/notes -> { notes: [...] }   POST /api/notes { name, text } -> { ok, note }
 export const config = { runtime: 'edge' };
 
-const PATHNAME = 'corkboard/notes.json';
 const API = 'https://blob.vercel-storage.com';
+const LEGACY_PATH = 'corkboard/notes.json';
+const NOTES_PREFIX = 'corkboard/notes/';
 const MAX_NOTES = 300;
 const PALETTE = ['yellow', 'pink', 'blue', 'green', 'orange', 'lilac'];
 
@@ -26,48 +29,44 @@ function json(body, status = 200) {
   });
 }
 
-async function readNotes(token) {
-  const listRes = await fetch(`${API}?prefix=corkboard/&limit=10`, {
-    headers: { authorization: `Bearer ${token}` },
-  });
-  if (!listRes.ok) return [];
-  const list = await listRes.json();
-  const blob = (list.blobs || []).find((b) => b.pathname === PATHNAME);
-  if (!blob) return [];
-  const res = await fetch(blob.url, { headers: { 'cache-control': 'no-store' } });
-  if (!res.ok) return [];
-  try {
+async function listBlobs(token, prefix) {
+  const out = [];
+  let cursor;
+  do {
+    const url = `${API}?prefix=${encodeURIComponent(prefix)}&limit=1000${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`;
+    const res = await fetch(url, { headers: { authorization: `Bearer ${token}` } });
+    if (!res.ok) break;
     const data = await res.json();
-    return Array.isArray(data.notes) ? data.notes : [];
-  } catch {
-    return [];
-  }
+    out.push(...(data.blobs || []));
+    cursor = data.hasMore ? data.cursor : undefined;
+  } while (cursor);
+  return out;
 }
 
-async function writeNotes(token, notes) {
-  const payload = JSON.stringify({ notes });
-  const put = () =>
-    fetch(`${API}/${PATHNAME}`, {
-      method: 'PUT',
-      headers: {
-        authorization: `Bearer ${token}`,
-        'x-content-type': 'application/json',
-        'x-add-random-suffix': '0',
-        'x-allow-overwrite': '1',
-      },
-      body: payload,
-    });
-  let res = await put();
-  if (!res.ok) {
-    // Fallback for stores where overwrite needs a delete first.
-    await fetch(`${API}/delete`, {
-      method: 'POST',
-      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
-      body: JSON.stringify({ urls: [`${API}/${PATHNAME}`] }),
-    }).catch(() => {});
-    res = await put();
-  }
-  return res.ok;
+async function readNotes(token) {
+  const blobs = await listBlobs(token, 'corkboard/');
+  const notes = [];
+  await Promise.all(
+    blobs.map(async (b) => {
+      try {
+        const res = await fetch(b.url);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (b.pathname === LEGACY_PATH && Array.isArray(data.notes)) {
+          notes.push(...data.notes);
+        } else if (b.pathname.startsWith(NOTES_PREFIX) && data && data.id) {
+          notes.push(data);
+        }
+      } catch {
+        /* skip unreadable blob */
+      }
+    })
+  );
+  const seen = new Set();
+  return notes
+    .filter((n) => n && n.id && !seen.has(n.id) && seen.add(n.id))
+    .sort((a, b) => (a.ts || 0) - (b.ts || 0))
+    .slice(-MAX_NOTES);
 }
 
 export default async function handler(req) {
@@ -75,20 +74,24 @@ export default async function handler(req) {
   if (!token) return json({ error: 'board storage not configured' }, 500);
   try {
     if (req.method === 'GET') {
-      const notes = await readNotes(token);
-      return json({ notes });
+      return json({ notes: await readNotes(token) });
     }
     if (req.method === 'POST') {
       const body = await req.json().catch(() => ({}));
       const name = String(body.name || '').trim().slice(0, 40);
       const text = String(body.text || '').trim().slice(0, 500);
       if (!name || !text) return json({ error: 'name and note are both required' }, 400);
-      const notes = await readNotes(token);
       const note = { id: crypto.randomUUID(), name, text, ts: Date.now(), color: await colorFor(req) };
-      notes.push(note);
-      while (notes.length > MAX_NOTES) notes.shift();
-      const ok = await writeNotes(token, notes);
-      if (!ok) return json({ error: 'could not save the note' }, 502);
+      const res = await fetch(`${API}/${NOTES_PREFIX}${note.ts}-${note.id}.json`, {
+        method: 'PUT',
+        headers: {
+          authorization: `Bearer ${token}`,
+          'x-content-type': 'application/json',
+          'x-add-random-suffix': '0',
+        },
+        body: JSON.stringify(note),
+      });
+      if (!res.ok) return json({ error: 'could not save the note' }, 502);
       return json({ ok: true, note });
     }
     return json({ error: 'method not allowed' }, 405);
