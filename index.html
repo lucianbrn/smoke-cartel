@@ -148,6 +148,56 @@
     .status-copy { margin: 9px 0 0; font-size: 13.5px; line-height: 1.6; color: rgba(251, 234, 211, .92); }
     .status-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 0 2px; border: 0; border-bottom: 1.5px solid var(--gold); background: transparent; color: #FBEAD3; font-family: var(--font-cond); font-size: 12.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; white-space: nowrap; cursor: pointer; }
     .status-link:hover { color: var(--gold-soft); }
+    /* The Road So Far: the whole-journey tracker, directly under the status
+       band. Its percentage is done ÷ total across every milestone listed
+       here — the "journey" number, distinct from the Legal ladder's
+       step-of-9 in the band above. States read at a glance: gold check =
+       done, pulsing purple dot = in progress (the panel's only motion),
+       hollow ring = up next. */
+    .road-panel {
+      margin-top: 16px;
+      padding: 20px 22px 18px;
+      border: 1.5px solid var(--ink);
+      background: var(--panel);
+      box-shadow: 4px 4px 0 rgba(30, 20, 12, .15);
+    }
+    .road-head { display: flex; align-items: end; justify-content: space-between; gap: 16px 28px; flex-wrap: wrap; }
+    .road-tag { margin: 0 0 6px; color: var(--purple); font-size: 11px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
+    .road-title { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: clamp(24px, 3.4vw, 32px); line-height: 1.1; letter-spacing: -.015em; }
+    .road-score { text-align: right; }
+    .road-pct { display: block; font-family: var(--font-display); font-weight: 800; font-size: 40px; line-height: 1; color: var(--purple); }
+    .road-count { display: block; margin-top: 4px; color: var(--muted); font-size: 11.5px; letter-spacing: .04em; }
+    .road-track { height: 6px; margin-top: 16px; background: rgba(117, 47, 83, .16); }
+    .road-track i { display: block; height: 100%; background: var(--gold); }
+    .road-groups { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 40px; margin-top: 18px; }
+    .road-group { min-width: 0; }
+    .road-group-head { display: flex; align-items: baseline; gap: 9px; margin: 14px 0 4px; padding-bottom: 7px; border-bottom: 1px solid var(--rule); }
+    .road-group:first-child .road-group-head { margin-top: 0; }
+    .road-group-name { font-family: var(--font-cond); font-size: 12.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--ink); }
+    .road-group-num { color: var(--muted); font-size: 11.5px; }
+    .road-list { margin: 0; padding: 0; list-style: none; }
+    .road-item { display: flex; align-items: flex-start; gap: 11px; padding: 9px 0; border-bottom: 1px solid rgba(30, 20, 12, .1); font-size: 13.5px; line-height: 1.5; }
+    .road-item:last-child { border-bottom: 0; }
+    .road-mark { flex: 0 0 auto; width: 20px; height: 20px; margin-top: 1px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
+    .road-item[data-state="done"] { color: var(--ink); }
+    .road-item[data-state="done"] .road-mark { background: var(--gold); border: 1.5px solid var(--ink); color: var(--ink); font-size: 12px; font-weight: 700; line-height: 1; }
+    .road-item[data-state="now"] { color: var(--ink); font-weight: 600; }
+    .road-item[data-state="now"] .road-mark { border: 1.5px solid var(--purple); }
+    .road-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--purple); animation: road-pulse 2s ease-in-out infinite; }
+    @keyframes road-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.45); opacity: .55; } }
+    .road-item[data-state="next"] { color: var(--muted); }
+    .road-item[data-state="next"] .road-mark { border: 1.5px solid rgba(30, 20, 12, .35); background: transparent; }
+    .road-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px 24px; flex-wrap: wrap; margin-top: 16px; padding-top: 13px; border-top: 1px solid var(--gold-dim); }
+    .road-updated { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .road-updated strong { color: var(--ink); }
+    @media (max-width: 700px) {
+      .road-panel { padding: 17px 16px 15px; }
+      .road-groups { grid-template-columns: 1fr; }
+      .road-score { text-align: left; }
+      .road-pct { font-size: 34px; }
+      .road-item { padding: 10px 0; }
+    }
+    @media (prefers-reduced-motion: reduce) { .road-dot { animation: none; } }
     /* The owners: two arched doorways off the courtyard. */
     .owners { padding: 38px 0 49px; }
     .owners-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 22px; }
@@ -903,6 +953,54 @@
           </div>
           <button type="button" class="status-link" data-goto="legal-panel">Open Legal &amp; Launch →</button>
         </div>
+        <section class="road-panel" aria-labelledby="road-title">
+          <div class="road-head">
+            <div>
+              <p class="road-tag">Progress tracker · the whole journey</p>
+              <h3 class="road-title" id="road-title">The Road So Far</h3>
+            </div>
+            <div class="road-score">
+              <span class="road-pct" id="road-pct">25%</span>
+              <span class="road-count" id="road-count">4 of 16 journey milestones done</span>
+            </div>
+          </div>
+          <div class="road-track" role="img" aria-label="Journey progress: 4 of 16 milestones done, 25 percent"><i id="road-bar" style="width:25%"></i></div>
+          <div class="road-groups">
+            <div class="road-group">
+              <div class="road-group-head"><span class="road-group-name">Done</span><span class="road-group-num">4</span></div>
+              <ul class="road-list">
+                <li class="road-item" data-state="done"><span class="road-mark" aria-hidden="true">✓</span><span>Store named + brand built (v2 logo, crown, elephant)</span></li>
+                <li class="road-item" data-state="done"><span class="road-mark" aria-hidden="true">✓</span><span>Market + legal research pack (7 locations priced, SBA math corrected)</span></li>
+                <li class="road-item" data-state="done"><span class="road-mark" aria-hidden="true">✓</span><span>The Network mapped — 465+ connections scanned, gaps named</span></li>
+                <li class="road-item" data-state="done"><span class="road-mark" aria-hidden="true">✓</span><span>Site live at smoke-cartel.vercel.app, self-updating</span></li>
+              </ul>
+              <div class="road-group-head"><span class="road-group-name">In progress</span><span class="road-group-num">2</span></div>
+              <ul class="road-list">
+                <li class="road-item" data-state="now"><span class="road-mark" aria-hidden="true"><span class="road-dot"></span></span><span>Maryland name check — “Smoke Cartel” availability at SDAT</span></li>
+                <li class="road-item" data-state="now"><span class="road-mark" aria-hidden="true"><span class="road-dot"></span></span><span>LLC filing packet being prepped (Articles + operating agreement draft)</span></li>
+              </ul>
+            </div>
+            <div class="road-group">
+              <div class="road-group-head"><span class="road-group-name">Up next</span><span class="road-group-num">10</span></div>
+              <ul class="road-list">
+                <li class="road-item" data-state="next"><span class="road-mark" aria-hidden="true"></span><span>File the Articles of Organization ($150 online)</span></li>
+                <li class="road-item" data-state="next"><span class="road-mark" aria-hidden="true"></span><span>Sign the operating agreement (Lucian × Josiah)</span></li>
+                <li class="road-item" data-state="next"><span class="road-mark" aria-hidden="true"></span><span>Get the EIN</span></li>
+                <li class="road-item" data-state="next"><span class="road-mark" aria-hidden="true"></span><span>Pick the location (open decision)</span></li>
+                <li class="road-item" data-state="next"><span class="road-mark" aria-hidden="true"></span><span>Zoning verification letter</span></li>
+                <li class="road-item" data-state="next"><span class="road-mark" aria-hidden="true"></span><span>County retail licenses</span></li>
+                <li class="road-item" data-state="next"><span class="road-mark" aria-hidden="true"></span><span>Business bank account + SBA conversation</span></li>
+                <li class="road-item" data-state="next"><span class="road-mark" aria-hidden="true"></span><span>First order — $125.50</span></li>
+                <li class="road-item" data-state="next"><span class="road-mark" aria-hidden="true"></span><span>Lease + buildout</span></li>
+                <li class="road-item" data-state="next"><span class="road-mark" aria-hidden="true"></span><span>Doors open</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="road-foot">
+            <p class="road-updated"><strong>Last updated — November 5, 2026:</strong> tracker added; name check and LLC filing packet moved to in progress. The filing steps themselves live on the Legal &amp; Launch ladder (Step 3 of 9) — this percentage counts the whole journey.</p>
+            <button type="button" class="cmd-link" data-goto="legal-panel">See the Legal &amp; Launch ladder →</button>
+          </div>
+        </section>
         <div class="net-grid">
           <article class="lane-card">
             <span class="lane-no">The Vision</span>
@@ -2664,6 +2762,29 @@
         input.value = "";
         ask(text, null);
       });
+    })();
+  </script>
+  <script>
+    /* The Road So Far: the journey percentage is computed from the items
+       actually listed in the tracker — done ÷ total — so the number can
+       never drift from the checklist. Moving a milestone means changing
+       its data-state; the count, bar, and percent follow on next load. */
+    (function () {
+      var items = document.querySelectorAll(".road-item");
+      var pctEl = document.getElementById("road-pct");
+      var countEl = document.getElementById("road-count");
+      var barEl = document.getElementById("road-bar");
+      if (!items.length || !pctEl) return;
+      var done = document.querySelectorAll('.road-item[data-state="done"]').length;
+      var total = items.length;
+      var pct = Math.round((done / total) * 100);
+      pctEl.textContent = pct + "%";
+      if (countEl) countEl.textContent = done + " of " + total + " journey milestones done";
+      if (barEl) {
+        barEl.style.width = pct + "%";
+        var track = barEl.closest(".road-track");
+        if (track) track.setAttribute("aria-label", "Journey progress: " + done + " of " + total + " milestones done, " + pct + " percent");
+      }
     })();
   </script>
 </body>
